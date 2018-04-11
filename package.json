@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "description": "blintz language",
   "main": "build/main/index.js",
+  "bin": {
+    "blintz": "build/main/bin/index.js"
+  },
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
   "repository": "https://github.com/jffjs/blintz",
   "license": "MIT",
   "keywords": [],
   "scripts": {
+    "start": "node build/main/bin/index.js",
     "info": "npm-scripts-info",
     "build": "run-s clean && run-p build:*",
     "build:main": "tsc -p tsconfig.json",
