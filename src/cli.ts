@@ -1,13 +1,13 @@
-import minimist, { ParsedArgs } from 'minimist';
 import { Blintz } from './lib/blintz';
 
 const blintz = new Blintz();
 
-const args: ParsedArgs = minimist(process.argv);
-console.log(args);
+const args = process.argv.splice(2);
 
-if (args.f) {
-  blintz.runFile(args.f);
+if (args.length > 1) {
+  console.info("Usage: blintz [script]");
+} else if (args.length === 1) {
+  blintz.runFile(args[0]);
 } else {
   blintz.runPrompt();
 }

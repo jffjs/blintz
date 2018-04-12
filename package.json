@@ -12,7 +12,7 @@
   "license": "MIT",
   "keywords": [],
   "scripts": {
-    "start": "run-s build:main && node build/main/cli.js",
+    "start": "run-s build:main && bin/blintz",
     "info": "npm-scripts-info",
     "build": "run-s clean && run-p build:*",
     "build:main": "tsc -p tsconfig.json",
