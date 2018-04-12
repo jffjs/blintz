@@ -4,7 +4,7 @@
   "description": "blintz language",
   "main": "build/main/index.js",
   "bin": {
-    "blintz": "build/main/bin/index.js"
+    "blintz": "build/main/cli.js"
   },
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "keywords": [],
   "scripts": {
-    "start": "node build/main/bin/index.js",
+    "start": "run-s build:main && node build/main/cli.js",
     "info": "npm-scripts-info",
     "build": "run-s clean && run-p build:*",
     "build:main": "tsc -p tsconfig.json",
@@ -57,9 +57,11 @@
     "node": ">=8.9"
   },
   "dependencies": {
+    "minimist": "^1.2.0",
     "sha.js": "^2.4.10"
   },
   "devDependencies": {
+    "@types/minimist": "^1.2.0",
     "ava": "^1.0.0-beta.3",
     "codecov": "^3.0.0",
     "cz-conventional-changelog": "^2.1.0",
@@ -76,7 +78,7 @@
     "tslint-config-prettier": "^1.8.0",
     "tslint-immutable": "^4.5.1",
     "typedoc": "^0.11.1",
-    "typescript": "^2.4.1"
+    "typescript": "^2.8.1"
   },
   "ava": {
     "failFast": true,
