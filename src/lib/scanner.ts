@@ -1,7 +1,10 @@
+
 import { Blintz } from './blintz';
 import { LiteralVal, Token, TokenType } from './token';
 
-type KeywordMap = { [k: string]: TokenType };
+interface KeywordMap {
+  [k: string]: TokenType;
+}
 
 export class Scanner {
   private static readonly keywords: KeywordMap = {
@@ -21,7 +24,7 @@ export class Scanner {
     'true': TokenType.True,
     'var': TokenType.Var,
     'while': TokenType.While
-  }
+  };
 
   private readonly tokens: Token[] = [];
   private start: number = 0;
@@ -147,7 +150,7 @@ export class Scanner {
 
     // Unterminated string
     if (this.isAtEnd) {
-      Blintz.error(this.line, "Unterminated string.");
+      Blintz.error(this.line, 'Unterminated string.');
       return;
     }
 
