@@ -49,6 +49,16 @@ export class LiteralExpr extends Expr {
   }
 }
 
+export class LogicalExpr extends Expr {
+  constructor(public left: Expr, public operator: Token, public right: Expr) {
+    super();
+  }
+
+  public accept<T>(visitor: ExprVisitor<T>): T {
+    return visitor.visitLogicalExpr(this);
+  }
+}
+
 export class UnaryExpr extends Expr {
   constructor(public operator: Token, public right: Expr) {
     super();
@@ -74,6 +84,7 @@ export interface ExprVisitor<T> {
   visitBinaryExpr(expr: BinaryExpr): T;
   visitGroupingExpr(expr: GroupingExpr): T;
   visitLiteralExpr(expr: LiteralExpr): T;
+  visitLogicalExpr(expr: LogicalExpr): T;
   visitUnaryExpr(expr: UnaryExpr): T;
   visitVariableExpr(expr: VariableExpr): T;
 }

@@ -53,8 +53,16 @@ export default class Parser {
   }
 
   private statement(): Stmt.Stmt {
+    if (this.match(TokenType.If)) {
+      return this.ifStatement();
+    }
+
     if (this.match(TokenType.Print)) {
       return this.printStatement();
+    }
+
+    if (this.match(TokenType.While)) {
+      return this.whileStatement();
     }
 
     if (this.match(TokenType.LeftBrace)) {
@@ -79,10 +87,33 @@ export default class Parser {
     return statements;
   }
 
+  private ifStatement(): Stmt.Stmt {
+    this.consume(TokenType.LeftParen, `Expect '(' after 'if'.`);
+    const condition = this.expression();
+    this.consume(TokenType.RightParen, `Expect ')' after if condition.`);
+
+    const thenBranch = this.statement();
+    let elseBranch = null;
+    if (this.match(TokenType.Else)) {
+      elseBranch = this.statement();
+    }
+
+    return new Stmt.IfStmt(condition, thenBranch, elseBranch);
+  }
+
   private printStatement(): Stmt.Stmt {
     const value = this.expression();
     this.consume(TokenType.Semicolon, `Expect ';' after value.`);
     return new Stmt.PrintStmt(value);
+  }
+
+  private whileStatement(): Stmt.Stmt {
+    this.consume(TokenType.LeftParen, `Expect '(' after 'while'.`);
+    const condition = this.expression();
+    this.consume(TokenType.RightParen, `Expect ')' after while condition.`);
+    const body = this.statement();
+
+    return new Stmt.WhileStmt(condition, body);
   }
 
   private expressionStatement(): Stmt.Stmt {
@@ -96,7 +127,7 @@ export default class Parser {
   }
 
   private assignment(): Expr.Expr {
-    const expr = this.equality();
+    const expr = this.or();
 
     if (this.match(TokenType.Equal)) {
       const equals = this.previous();
@@ -108,6 +139,30 @@ export default class Parser {
       }
 
       throw new ParseError(equals, 'Invalid assignment target.');
+    }
+
+    return expr;
+  }
+
+  private or(): Expr.Expr {
+    let expr = this.and();
+
+    while (this.match(TokenType.Or)) {
+      const operator = this.previous();
+      const right = this.and();
+      expr = new Expr.LogicalExpr(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private and(): Expr.Expr {
+    let expr = this.equality();
+
+    while (this.match(TokenType.And)) {
+      const operator = this.previous();
+      const right = this.equality();
+      expr = new Expr.LogicalExpr(expr, operator, right);
     }
 
     return expr;

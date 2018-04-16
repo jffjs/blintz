@@ -26,6 +26,14 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     this.evaluate(stmt.expression);
   }
 
+  public visitIfStmt(stmt: Stmt.IfStmt): void {
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch) {
+        this.execute(stmt.elseBranch);
+    }
+  }
+
   public visitPrintStmt(stmt: Stmt.PrintStmt): void {
     const value = this.evaluate(stmt.expression);
     printLn(stringify(value));
@@ -39,6 +47,12 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     }
 
     this.environment.define(stmt.name.lexeme, value);
+  }
+
+  public visitWhileStmt(stmt: Stmt.WhileStmt): void {
+    while (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.body);
+    }
   }
 
   public visitAssignExpr(expr: Expr.AssignExpr): Value {
@@ -101,6 +115,18 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
 
   public visitLiteralExpr(expr: Expr.LiteralExpr): Value {
     return expr.value as Value;
+  }
+
+  public visitLogicalExpr(expr: Expr.LogicalExpr): Value {
+    const left = this.evaluate(expr.left);
+
+    if (expr.operator.type === TokenType.Or) {
+      if (this.isTruthy(left)) { return left; }
+    } else {
+      if (!this.isTruthy(left)) { return left; }
+    }
+
+    return this.evaluate(expr.right);
   }
 
   public visitUnaryExpr(expr: Expr.UnaryExpr): Value {

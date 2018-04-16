@@ -31,6 +31,10 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
     }
   }
 
+  public visitLogicalExpr(expr: Expr.LogicalExpr): string {
+    return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
+  }
+
   public visitUnaryExpr(expr: Expr.UnaryExpr): string {
     return this.parenthesize(expr.operator.lexeme, expr.right);
   }

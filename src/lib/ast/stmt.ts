@@ -29,6 +29,16 @@ export class ExpressionStmt extends Stmt {
   }
 }
 
+export class IfStmt extends Stmt {
+  constructor(public condition: Expr, public thenBranch: Stmt, public elseBranch: Stmt | null) {
+    super();
+  }
+
+  public accept<T>(visitor: StmtVisitor<T>): T {
+    return visitor.visitIfStmt(this);
+  }
+}
+
 export class PrintStmt extends Stmt {
   constructor(public expression: Expr) {
     super();
@@ -49,9 +59,21 @@ export class VarStmt extends Stmt {
   }
 }
 
+export class WhileStmt extends Stmt {
+  constructor(public condition: Expr, public body: Stmt) {
+    super();
+  }
+
+  public accept<T>(visitor: StmtVisitor<T>): T {
+    return visitor.visitWhileStmt(this);
+  }
+}
+
 export interface StmtVisitor<T> {
   visitBlockStmt(expr: BlockStmt): T;
   visitExpressionStmt(expr: ExpressionStmt): T;
+  visitIfStmt(expr: IfStmt): T;
   visitPrintStmt(expr: PrintStmt): T;
   visitVarStmt(expr: VarStmt): T;
+  visitWhileStmt(expr: WhileStmt): T;
 }

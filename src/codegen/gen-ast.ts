@@ -93,6 +93,11 @@ const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
   'Literal': [
     'value: Value'
   ],
+  'Logical': [
+    'left: Expr',
+    'operator: Token',
+    'right: Expr'
+  ],
   'Unary': [
     'operator: Token',
     'right: Expr'
@@ -111,12 +116,21 @@ const stmtGenerator = new AstGenerator('./src/lib/ast', 'Stmt', {
   'Expression': [
     'expression: Expr'
   ],
+  'If': [
+    'condition: Expr',
+    'thenBranch: Stmt',
+    'elseBranch: Stmt | null'
+  ],
   'Print': [
     'expression: Expr'
   ],
   'Var': [
     'name: Token',
     'initializer: Expr | null'
+  ],
+  'While': [
+    'condition: Expr',
+    'body: Stmt'
   ]
 }, [`import { Expr } from './expr';`, `import { Token } from '../token';`]);
 
