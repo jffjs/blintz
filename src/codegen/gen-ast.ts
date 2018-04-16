@@ -50,9 +50,10 @@ export abstract class ${this.baseName} {
 
   private defineType(type: string, fieldList: string[]): string {
     const className = type + this.baseName;
+    const fields = fieldList.map(field => `public ${field}`).join(', ');
     return `
 export class ${className} extends ${this.baseName} {
-  constructor(${fieldList.join(', ')}) {
+  constructor(${fields}) {
     super();
   }
 
@@ -77,32 +78,46 @@ export interface ${this.baseName}Visitor<T> {
 }
 
 const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
+  'Assign': [
+    'name: Token',
+    'value: Expr'
+  ],
   'Binary': [
-    'public left: Expr',
-    'public operator: Token',
-    'public right: Expr'
+    'left: Expr',
+    'operator: Token',
+    'right: Expr'
   ],
   'Grouping': [
-    'public expression: Expr'
+    'expression: Expr'
   ],
   'Literal': [
-    'public value: Value'
+    'value: Value'
   ],
   'Unary': [
-    'public operator: Token',
-    'public right: Expr'
+    'operator: Token',
+    'right: Expr'
+  ],
+  'Variable': [
+    'name: Token'
   ]
-}, [`import { Token } from '../token'`, `import { Value } from '../value'`]);
+}, [`import { Token } from '../token';`, `import { Value } from '../value';`]);
 
 exprGenerator.run();
 
 const stmtGenerator = new AstGenerator('./src/lib/ast', 'Stmt', {
+  'Block': [
+    'statements: Stmt[]'
+  ],
   'Expression': [
-    'public expression: Expr'
+    'expression: Expr'
   ],
   'Print': [
-    'public expression: Expr'
+    'expression: Expr'
+  ],
+  'Var': [
+    'name: Token',
+    'initializer: Expr | null'
   ]
-}, [`import { Expr } from './expr'`]);
+}, [`import { Expr } from './expr';`, `import { Token } from '../token';`]);
 
 stmtGenerator.run();

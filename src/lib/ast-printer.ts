@@ -5,6 +5,10 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
     return expr.accept(this);
   }
 
+  public visitAssignExpr(expr: Expr.AssignExpr): string {
+    return this.parenthesize(`assign ${expr.name.lexeme}`, expr.value);
+  }
+
   public visitBinaryExpr(expr: Expr.BinaryExpr): string {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
   }
@@ -29,6 +33,10 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
 
   public visitUnaryExpr(expr: Expr.UnaryExpr): string {
     return this.parenthesize(expr.operator.lexeme, expr.right);
+  }
+
+  public visitVariableExpr(expr: Expr.VariableExpr): string {
+    return this.parenthesize(expr.name.lexeme);
   }
 
   private parenthesize(name: string, ...exprs: Expr.Expr[]): string {

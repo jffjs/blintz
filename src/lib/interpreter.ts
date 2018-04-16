@@ -1,11 +1,14 @@
 import * as Expr from './ast/expr';
 import * as Stmt from './ast/stmt';
+import Environment from './environment';
 import { printLn } from './print';
 import RuntimeError from './runtime-error';
 import { Token, TokenType } from './token';
 import { stringify, Value } from './value';
 
 export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVisitor<void> {
+
+  private environment = new Environment();
 
   public interpret(statements: Stmt.Stmt[]): void {
     try {
@@ -15,6 +18,10 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     }
   }
 
+  public visitBlockStmt(stmt: Stmt.BlockStmt): void {
+    this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
   public visitExpressionStmt(stmt: Stmt.ExpressionStmt): void {
     this.evaluate(stmt.expression);
   }
@@ -22,6 +29,24 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
   public visitPrintStmt(stmt: Stmt.PrintStmt): void {
     const value = this.evaluate(stmt.expression);
     printLn(stringify(value));
+  }
+
+  public visitVarStmt(stmt: Stmt.VarStmt): void {
+    let value: Value = null;
+
+    if (stmt.initializer) {
+      value = this.evaluate(stmt.initializer);
+    }
+
+    this.environment.define(stmt.name.lexeme, value);
+  }
+
+  public visitAssignExpr(expr: Expr.AssignExpr): Value {
+    const value = this.evaluate(expr.value);
+
+    this.environment.assign(expr.name, value);
+
+    return value;
   }
 
   public visitBinaryExpr(expr: Expr.BinaryExpr): Value {
@@ -93,8 +118,25 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     throw new RuntimeError(expr.operator, 'Something has gone wrong.');
   }
 
+  public visitVariableExpr(expr: Expr.VariableExpr): Value {
+    return this.environment.get(expr.name);
+  }
+
   private execute(stmt: Stmt.Stmt): void {
     stmt.accept(this);
+  }
+
+  private executeBlock(statements: Stmt.Stmt[], environment: Environment): void {
+    const previous: Environment = this.environment;
+
+    try {
+      this.environment = environment;
+      statements.forEach(statement => {
+        this.execute(statement);
+      });
+    } finally {
+      this.environment = previous;
+    }
   }
 
   private evaluate(expr: Expr.Expr): Value {
