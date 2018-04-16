@@ -1,15 +1,30 @@
-import * as Ast from './ast/expr';
+import * as Expr from './ast/expr';
+import * as Stmt from './ast/stmt';
+import { printLn } from './print';
 import RuntimeError from './runtime-error';
 import { Token, TokenType } from './token';
-import { Value } from './value';
+import { stringify, Value } from './value';
 
-export default class Interpreter implements Ast.ExprVisitor<Value> {
+export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVisitor<void> {
 
-  public interpret(expression: Ast.Expr): Value {
-    return this.evaluate(expression);
+  public interpret(statements: Stmt.Stmt[]): void {
+    try {
+      statements.forEach(statement => this.execute(statement));
+    } catch (err) {
+      return;
+    }
   }
 
-  public visitBinaryExpr(expr: Ast.BinaryExpr): Value {
+  public visitExpressionStmt(stmt: Stmt.ExpressionStmt): void {
+    this.evaluate(stmt.expression);
+  }
+
+  public visitPrintStmt(stmt: Stmt.PrintStmt): void {
+    const value = this.evaluate(stmt.expression);
+    printLn(stringify(value));
+  }
+
+  public visitBinaryExpr(expr: Expr.BinaryExpr): Value {
     const left = this.evaluate(expr.left);
     const right = this.evaluate(expr.right);
 
@@ -55,15 +70,15 @@ export default class Interpreter implements Ast.ExprVisitor<Value> {
     throw new RuntimeError(expr.operator, 'Something has gone wrong.');
   }
 
-  public visitGroupingExpr(expr: Ast.GroupingExpr): Value {
+  public visitGroupingExpr(expr: Expr.GroupingExpr): Value {
     return this.evaluate(expr.expression);
   }
 
-  public visitLiteralExpr(expr: Ast.LiteralExpr): Value {
+  public visitLiteralExpr(expr: Expr.LiteralExpr): Value {
     return expr.value as Value;
   }
 
-  public visitUnaryExpr(expr: Ast.UnaryExpr): Value {
+  public visitUnaryExpr(expr: Expr.UnaryExpr): Value {
     const right = this.evaluate(expr.right);
 
     switch (expr.operator.type) {
@@ -78,7 +93,11 @@ export default class Interpreter implements Ast.ExprVisitor<Value> {
     throw new RuntimeError(expr.operator, 'Something has gone wrong.');
   }
 
-  private evaluate(expr: Ast.Expr): Value {
+  private execute(stmt: Stmt.Stmt): void {
+    stmt.accept(this);
+  }
+
+  private evaluate(expr: Expr.Expr): Value {
     return expr.accept(this);
   }
 

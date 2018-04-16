@@ -4,18 +4,14 @@ import { createInterface, ReadLine } from 'readline';
 import Interpreter from './interpreter';
 import Parser from './parser';
 import { printErr, printLn } from './print';
+import RuntimeError from './runtime-error';
 import { Scanner } from './scanner';
 import { Token, TokenType } from './token';
-import { Value } from './value';
-import RuntimeError from './runtime-error';
 
 export default class Blintz {
 
   public static hadError: boolean = false;
   public static hadRuntimeError: boolean = false;
-
-  private readonly interpreter = new Interpreter();
-  private lastValue: Value = null;
 
   public static error(line: number, msg: string, token?: Token) {
     if (token) {
@@ -31,7 +27,7 @@ export default class Blintz {
 
   public static runtimeError(err: RuntimeError) {
     printLn(err.message);
-    printLn(`[line ${err.token.line}]`)
+    printLn(`[line ${err.token.line}]`);
     this.hadRuntimeError = true;
   }
 
@@ -39,6 +35,8 @@ export default class Blintz {
     printErr(`[line ${line}] Error${where}: ${msg}`);
     Blintz.hadError = true;
   }
+
+  private readonly interpreter = new Interpreter();
 
   private rl: ReadLine = createInterface({
     input: process.stdin,
@@ -81,9 +79,6 @@ export default class Blintz {
         break;
       default:
         this.run(line);
-        if (!Blintz.hadError && !Blintz.hadRuntimeError) {
-          this.print(this.lastValue);
-        }
         Blintz.hadError = false;
         Blintz.hadRuntimeError = false;
     }
@@ -93,26 +88,10 @@ export default class Blintz {
     const scanner: Scanner = new Scanner(source);
     const tokens: Token[] = scanner.scanTokens();
     const parser: Parser = new Parser(tokens);
-    const expression = parser.parse();
+    const statements = parser.parse();
 
     if (Blintz.hadError) { return; }
 
-    if (expression) {
-      try {
-        this.lastValue = this.interpreter.interpret(expression);
-      } catch (err) {
-        Blintz.runtimeError(err);
-      }
-    }
-  }
-
-  private print(value: Value) {
-    if (typeof value === 'string') {
-      printLn(`"${value}"`);
-    } else if (value !== null) {
-      printLn(value.toString());
-    } else {
-      printLn('nil');
-    }
+    this.interpreter.interpret(statements);
   }
 }

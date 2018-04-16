@@ -1,4 +1,5 @@
-import * as Ast from './ast/expr';
+import * as Expr from './ast/expr';
+import * as Stmt from './ast/stmt';
 import ParseError from './parse-error';
 import { Token, TokenType } from './token';
 
@@ -9,85 +10,110 @@ export default class Parser {
     private tokens: Token[]
   ) { }
 
-  public parse(): Ast.Expr | null {
+  public parse(): Stmt.Stmt[] {
     try {
-      return this.expression();
-    } catch (e) {
-      return null;
+      const statements: Stmt.Stmt[] = [];
+      while (!this.isAtEnd) {
+        statements.push(this.statement());
+      }
+
+      return statements;
+    } catch (err) {
+      return [];
     }
   }
 
-  private expression(): Ast.Expr {
+  private statement(): Stmt.Stmt {
+    if (this.match(TokenType.Print)) {
+      return this.printStatement();
+    }
+
+    return this.expressionStatement();
+  }
+
+  private printStatement(): Stmt.Stmt {
+    const value = this.expression();
+    this.consume(TokenType.Semicolon, `Expect ';' after value.`);
+    return new Stmt.PrintStmt(value);
+  }
+
+  private expressionStatement(): Stmt.Stmt {
+    const expression = this.expression();
+    this.consume(TokenType.Semicolon, `Expect ';' after expression.`);
+    return new Stmt.ExpressionStmt(expression);
+  }
+
+  private expression(): Expr.Expr {
     return this.equality();
   }
 
-  private equality(): Ast.Expr {
+  private equality(): Expr.Expr {
     let expr = this.comparison();
 
     while (this.match(TokenType.BangEqual, TokenType.EqualEqual)) {
       const operator = this.previous();
       const right = this.comparison();
-      expr = new Ast.BinaryExpr(expr, operator, right);
+      expr = new Expr.BinaryExpr(expr, operator, right);
     }
     return expr;
   }
 
-  private comparison(): Ast.Expr {
+  private comparison(): Expr.Expr {
     let expr = this.addition();
 
     while (this.match(TokenType.Greater, TokenType.GreaterEqual, TokenType.Less, TokenType.LessEqual)) {
       const operator = this.previous();
       const right = this.addition();
-      expr = new Ast.BinaryExpr(expr, operator, right);
+      expr = new Expr.BinaryExpr(expr, operator, right);
     }
     return expr;
   }
 
-  private addition(): Ast.Expr {
+  private addition(): Expr.Expr {
     let expr = this.multiplication();
 
     while (this.match(TokenType.Plus, TokenType.Minus)) {
       const operator = this.previous();
       const right = this.multiplication();
-      expr = new Ast.BinaryExpr(expr, operator, right);
+      expr = new Expr.BinaryExpr(expr, operator, right);
     }
     return expr;
   }
 
-  private multiplication(): Ast.Expr {
+  private multiplication(): Expr.Expr {
     let expr = this.unary();
 
     while (this.match(TokenType.Star, TokenType.Slash)) {
       const operator = this.previous();
       const right = this.unary();
-      expr = new Ast.BinaryExpr(expr, operator, right);
+      expr = new Expr.BinaryExpr(expr, operator, right);
     }
     return expr;
   }
 
-  private unary(): Ast.Expr {
+  private unary(): Expr.Expr {
     if (this.match(TokenType.Bang, TokenType.Minus)) {
       const operator = this.previous();
       const right = this.unary();
-      return new Ast.UnaryExpr(operator, right);
+      return new Expr.UnaryExpr(operator, right);
     }
 
     return this.primary();
   }
 
-  private primary(): Ast.Expr {
-    if (this.match(TokenType.False)) { return new Ast.LiteralExpr(false); }
-    if (this.match(TokenType.True)) { return new Ast.LiteralExpr(false); }
-    if (this.match(TokenType.Nil)) { return new Ast.LiteralExpr(null); }
+  private primary(): Expr.Expr {
+    if (this.match(TokenType.False)) { return new Expr.LiteralExpr(false); }
+    if (this.match(TokenType.True)) { return new Expr.LiteralExpr(true); }
+    if (this.match(TokenType.Nil)) { return new Expr.LiteralExpr(null); }
 
     if (this.match(TokenType.Number, TokenType.String)) {
-      return new Ast.LiteralExpr(this.previous().literal);
+      return new Expr.LiteralExpr(this.previous().literal);
     }
 
     if (this.match(TokenType.LeftParen)) {
       const expr = this.expression();
       this.consume(TokenType.RightParen, `Expect ')' after expression.`);
-      return new Ast.GroupingExpr(expr);
+      return new Expr.GroupingExpr(expr);
     }
 
     throw new ParseError('Expect expression.', this.peek());
