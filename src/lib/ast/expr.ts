@@ -1,7 +1,7 @@
 // This is a generated file. Do not edit manually.
 // Run `yarn gen:ast` to generate.
 /* tslint:disable */
-import { LiteralVal, Token } from '../token';
+import { Value, Token } from '../token';
 
 export abstract class Expr {
   public abstract accept<T>(visitor: ExprVisitor<T>): T;
@@ -28,7 +28,7 @@ export class GroupingExpr extends Expr {
 }
 
 export class LiteralExpr extends Expr {
-  constructor(public value: LiteralVal) {
+  constructor(public value: Value) {
     super();
   }
 

@@ -1,4 +1,4 @@
-import { Blintz } from './lib/blintz';
+import Blintz from './lib/blintz';
 import { printLn } from './lib/print';
 
 const blintz = new Blintz();

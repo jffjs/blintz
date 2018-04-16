@@ -1,6 +1,5 @@
-
-import { Blintz } from './blintz';
-import { LiteralVal, Token, TokenType } from './token';
+import Blintz from './blintz';
+import { Value, Token, TokenType } from './token';
 
 interface KeywordMap {
   [k: string]: TokenType;
@@ -109,7 +108,7 @@ export class Scanner {
     return this.isAlpha(c) || this.isDigit(c);
   }
 
-  private addToken(type: TokenType, literal: LiteralVal = null) {
+  private addToken(type: TokenType, literal: Value = null) {
     const lexeme = this.source.substring(this.start, this.current);
     this.tokens.push(new Token(type, lexeme, literal, this.line));
   }

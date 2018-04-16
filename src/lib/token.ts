@@ -1,3 +1,5 @@
+import { Value } from './value';
+
 export enum TokenType {
   // Single character tokens
   LeftParen, RightParen, LeftBrace, RightBrace,
@@ -61,14 +63,12 @@ const TOKEN_TYPE: { [t: number]: string } = {
   [TokenType.Eof]: 'Eof',
 };
 
-export type LiteralVal = string | number | boolean | null;
-
 export class Token {
 
   constructor(
     public readonly type: TokenType,
     public readonly lexeme: string,
-    public readonly literal: LiteralVal,
+    public readonly literal: Value,
     public readonly line: number
   ) { }
 
