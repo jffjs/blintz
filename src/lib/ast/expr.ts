@@ -1,7 +1,9 @@
 // This is a generated file. Do not edit manually.
 // Run `yarn gen:ast` to generate.
 /* tslint:disable */
-import { Value, Token } from '../token';
+
+import { Token } from '../token'
+import { Value } from '../value'
 
 export abstract class Expr {
   public abstract accept<T>(visitor: ExprVisitor<T>): T;

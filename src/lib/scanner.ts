@@ -1,5 +1,6 @@
 import Blintz from './blintz';
-import { Value, Token, TokenType } from './token';
+import { Token, TokenType } from './token';
+import { Value } from './value';
 
 interface KeywordMap {
   [k: string]: TokenType;

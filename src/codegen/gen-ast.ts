@@ -9,7 +9,8 @@ export class AstGenerator {
   constructor(
     private outputDir: string,
     private baseName: string,
-    private astSpec: AstSpec
+    private astSpec: AstSpec,
+    private imports: string[] = []
   ) { }
 
   public run() {
@@ -21,6 +22,7 @@ export class AstGenerator {
     const fileContent = `// This is a generated file. Do not edit manually.
 // Run \`yarn gen:ast\` to generate.
 /* tslint:disable */
+
 ${this.defineImports()}
 ${this.defineBase()}
 ${classes}
@@ -36,7 +38,7 @@ ${this.defineVisitor()}`;
   }
 
   private defineImports(): string {
-    return `import { LiteralVal, Token } from '../token';`;
+    return this.imports.join('\n');
   }
 
   private defineBase(): string {
@@ -67,7 +69,7 @@ export class ${className} extends ${this.baseName} {
     }).join('\n  ');
 
     return `
-export interface ExprVisitor<T> {
+export interface ${this.baseName}Visitor<T> {
   ${methods}
 }
 `;
@@ -84,13 +86,23 @@ const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
     'public expression: Expr'
   ],
   'Literal': [
-    'public value: LiteralVal'
+    'public value: Value'
   ],
   'Unary': [
     'public operator: Token',
     'public right: Expr'
   ]
-});
+}, [`import { Token } from '../token'`, `import { Value } from '../value'`]);
 
 exprGenerator.run();
 
+const stmtGenerator = new AstGenerator('./src/lib/ast', 'Stmt', {
+  'Expression': [
+    'public expression: Expr'
+  ],
+  'Print': [
+    'public expression: Expr'
+  ]
+}, [`import { Expr } from './expr'`]);
+
+stmtGenerator.run();
