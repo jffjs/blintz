@@ -82,15 +82,15 @@ const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
     'name: Token',
     'value: Expr'
   ],
-  'Call': [
-    'callee: Expr',
-    'paren: Token',
-    'args: Expr[]'
-  ],
   'Binary': [
     'left: Expr',
     'operator: Token',
     'right: Expr'
+  ],
+  'Call': [
+    'callee: Expr',
+    'paren: Token',
+    'args: Expr[]'
   ],
   'Grouping': [
     'expression: Expr'
@@ -120,6 +120,11 @@ const stmtGenerator = new AstGenerator('./src/lib/ast', 'Stmt', {
   ],
   'Expression': [
     'expression: Expr'
+  ],
+  'Function': [
+    'name: Token',
+    'parameters: Token[]',
+    'body: Stmt[]'
   ],
   'If': [
     'condition: Expr',

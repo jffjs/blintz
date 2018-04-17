@@ -1,7 +1,8 @@
 import * as Expr from './ast/expr';
 import * as Stmt from './ast/stmt';
-import Callable from './callable';
+import { isCallable } from './callable';
 import Environment from './environment';
+import BlintzFunction from './function';
 import { printLn } from './print';
 import RuntimeError from './runtime-error';
 import { Token, TokenType } from './token';
@@ -9,8 +10,17 @@ import { stringify, Value } from './value';
 
 export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVisitor<void> {
 
-  private environment = new Environment();
+  public readonly globals = new Environment();
+  private environment = this.globals;
 
+  constructor() {
+    this.globals.define('clock', {
+      arity: () => 0,
+      call: () => {
+        return new Date().valueOf() / 1000;
+      }
+    });
+  }
   public interpret(statements: Stmt.Stmt[]): void {
     try {
       statements.forEach(statement => this.execute(statement));
@@ -25,6 +35,11 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
 
   public visitExpressionStmt(stmt: Stmt.ExpressionStmt): void {
     this.evaluate(stmt.expression);
+  }
+
+  public visitFunctionStmt(stmt: Stmt.FunctionStmt): void {
+    const fn = new BlintzFunction(stmt);
+    this.environment.define(stmt.name.lexeme, fn);
   }
 
   public visitIfStmt(stmt: Stmt.IfStmt): void {
@@ -82,7 +97,7 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
       case TokenType.Less:
         this.checkNumberOperands(expr.operator, left, right);
         return (left as number) < (right as number);
-      case TokenType.GreaterEqual:
+      case TokenType.LessEqual:
         this.checkNumberOperands(expr.operator, left, right);
         return (left as number) <= (right as number);
       case TokenType.Minus:
@@ -113,8 +128,15 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
   public visitCallExpr(expr: Expr.CallExpr): Value {
     const callee = this.evaluate(expr.callee);
     const args = expr.args.map(arg => this.evaluate(arg));
-    const func = callee as Callable;
-    return func.call(this, args);
+
+    if (isCallable(callee)) {
+      if (args.length !== callee.arity()) {
+        throw new RuntimeError(expr.paren, `Expected ${callee.arity()} arguments but got ${args.length}.`);
+      }
+      return callee.call(this, args);
+    } else {
+      throw new RuntimeError(expr.paren, 'Can only call functions and classes.');
+    }
   }
 
   public visitGroupingExpr(expr: Expr.GroupingExpr): Value {
@@ -156,11 +178,11 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     return this.environment.get(expr.name);
   }
 
-  private execute(stmt: Stmt.Stmt): void {
+  public execute(stmt: Stmt.Stmt): void {
     stmt.accept(this);
   }
 
-  private executeBlock(statements: Stmt.Stmt[], environment: Environment): void {
+  public executeBlock(statements: Stmt.Stmt[], environment: Environment): void {
     const previous: Environment = this.environment;
 
     try {

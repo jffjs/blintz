@@ -28,15 +28,35 @@ export default class Parser {
 
   private declaration(): Stmt.Stmt | null {
     try {
-      if (this.match(TokenType.Var)) {
-        return this.varDeclaration();
-      }
+      if (this.match(TokenType.Fun)) { return this.functionStatement('function'); }
+      if (this.match(TokenType.Var)) { return this.varDeclaration(); }
 
       return this.statement();
     } catch {
       this.synchronize();
       return null;
     }
+  }
+
+  private functionStatement(kind: string): Stmt.Stmt {
+    const name = this.consume(TokenType.Identifier, `Expect ${kind} name.`);
+    this.consume(TokenType.LeftParen, `Expect '(' after ${kind} name.`);
+    const parameters: Token[] = [];
+    if (!this.check(TokenType.RightParen)) {
+      do {
+        if (parameters.length >= 8) {
+          throw new ParseError(this.peek(), 'Cannot have more than 8 parameters.');
+        }
+
+        parameters.push(this.consume(TokenType.Identifier, 'Expect parameter name.'));
+      } while (this.match(TokenType.Comma));
+    }
+    this.consume(TokenType.RightParen, `Expect ')' after parameters.`);
+
+    this.consume(TokenType.LeftBrace, `Expect '{' before ${kind} body.`);
+    const body = this.block();
+
+    return new Stmt.FunctionStmt(name, parameters, body);
   }
 
   private varDeclaration(): Stmt.Stmt {
