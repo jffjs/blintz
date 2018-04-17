@@ -19,6 +19,16 @@ export class AssignExpr extends Expr {
   }
 }
 
+export class CallExpr extends Expr {
+  constructor(public callee: Expr, public paren: Token, public args: Expr[]) {
+    super();
+  }
+
+  public accept<T>(visitor: ExprVisitor<T>): T {
+    return visitor.visitCallExpr(this);
+  }
+}
+
 export class BinaryExpr extends Expr {
   constructor(public left: Expr, public operator: Token, public right: Expr) {
     super();
@@ -81,6 +91,7 @@ export class VariableExpr extends Expr {
 
 export interface ExprVisitor<T> {
   visitAssignExpr(expr: AssignExpr): T;
+  visitCallExpr(expr: CallExpr): T;
   visitBinaryExpr(expr: BinaryExpr): T;
   visitGroupingExpr(expr: GroupingExpr): T;
   visitLiteralExpr(expr: LiteralExpr): T;

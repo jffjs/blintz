@@ -13,6 +13,10 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
   }
 
+  public visitCallExpr(expr: Expr.CallExpr): string {
+    return this.parenthesize(expr.accept(this), ...expr.args);
+  }
+
   public visitGroupingExpr(expr: Expr.GroupingExpr): string {
     return this.parenthesize('group', expr.expression);
   }
@@ -40,7 +44,7 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
   }
 
   public visitVariableExpr(expr: Expr.VariableExpr): string {
-    return this.parenthesize(expr.name.lexeme);
+    return expr.name.lexeme;
   }
 
   private parenthesize(name: string, ...exprs: Expr.Expr[]): string {

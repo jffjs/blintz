@@ -1,5 +1,6 @@
 import * as Expr from './ast/expr';
 import * as Stmt from './ast/stmt';
+import Callable from './callable';
 import Environment from './environment';
 import { printLn } from './print';
 import RuntimeError from './runtime-error';
@@ -107,6 +108,13 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
 
     // should be unreachable
     throw new RuntimeError(expr.operator, 'Something has gone wrong.');
+  }
+
+  public visitCallExpr(expr: Expr.CallExpr): Value {
+    const callee = this.evaluate(expr.callee);
+    const args = expr.args.map(arg => this.evaluate(arg));
+    const func = callee as Callable;
+    return func.call(this, args);
   }
 
   public visitGroupingExpr(expr: Expr.GroupingExpr): Value {

@@ -82,6 +82,11 @@ const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
     'name: Token',
     'value: Expr'
   ],
+  'Call': [
+    'callee: Expr',
+    'paren: Token',
+    'args: Expr[]'
+  ],
   'Binary': [
     'left: Expr',
     'operator: Token',

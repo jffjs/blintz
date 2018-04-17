@@ -252,7 +252,38 @@ export default class Parser {
       return new Expr.UnaryExpr(operator, right);
     }
 
-    return this.primary();
+    return this.call();
+  }
+
+  private call(): Expr.Expr {
+    let expr = this.primary();
+
+    while (true) {
+      if (this.match(TokenType.LeftParen)) {
+        expr = this.finishCall(expr);
+      } else {
+        break;
+      }
+    }
+
+    return expr;
+  }
+
+  private finishCall(callee: Expr.Expr): Expr.Expr {
+    const args: Expr.Expr[] = [];
+
+    if (!this.check(TokenType.RightParen)) {
+      do {
+        if (args.length >= 8) {
+          throw new ParseError(this.peek(), 'Cannot have more than 8 arguments.');
+        }
+        args.push(this.expression());
+      } while (this.match(TokenType.Comma));
+    }
+
+    const paren = this.consume(TokenType.RightParen, `Expect ')' after arguments.`);
+
+    return new Expr.CallExpr(callee, paren, args);
   }
 
   private primary(): Expr.Expr {
