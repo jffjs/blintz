@@ -144,10 +144,10 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
 
   private declare(name: Token) {
     this.ensureScope(scope => {
-      scope.set(name.lexeme, false);
       if (scope.has(name.lexeme)) {
         Blintz.error(name.line, 'Variable with this name already declared in this scope.', name);
       }
+      scope.set(name.lexeme, false);
     });
   }
 

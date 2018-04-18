@@ -25,7 +25,12 @@ export default class Environment {
   }
 
   public getAt(distance: number, name: string): Value {
-    return this.ancestor(distance).values.get(name) || null;
+    const value = this.ancestor(distance).values.get(name);
+    if (value !== undefined) {
+      return value;
+    } else {
+      return null;
+    }
   }
 
   public ancestor(distance: number): Environment {
