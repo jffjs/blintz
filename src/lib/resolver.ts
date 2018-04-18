@@ -5,10 +5,16 @@ import Interpreter from './interpreter';
 import Stack from './stack';
 import { Token } from './token';
 
+enum FunctionType {
+  None,
+  Function
+}
+
 type Scope = Map<string, boolean>;
 
 export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisitor<void> {
 
+  private currentFunction = FunctionType.None;
   private readonly scopes = new Stack<Scope>();
 
   constructor(private readonly interpreter: Interpreter) { }
@@ -40,7 +46,7 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     this.declare(stmt.name);
     this.define(stmt.name);
 
-    this.resolveFunction(stmt);
+    this.resolveFunction(stmt, FunctionType.Function);
   }
 
   public visitIfStmt(stmt: Stmt.IfStmt): void {
@@ -64,7 +70,13 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   }
 
   public visitReturnStmt(stmt: Stmt.ReturnStmt): void {
-    
+    if (this.currentFunction === FunctionType.None) {
+      Blintz.error(stmt.keyword.line, 'Cannot return from top-level code.', stmt.keyword);
+    }
+
+    if (stmt.value) {
+      this.resolve(stmt.value);
+    }
   }
 
   public visitWhileStmt(stmt: Stmt.WhileStmt): void {
@@ -75,6 +87,34 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   public visitAssignExpr(expr: Expr.AssignExpr): void {
     this.resolve(expr.value);
     this.resolveLocal(expr, expr.name);
+  }
+
+  public visitBinaryExpr(expr: Expr.BinaryExpr): void {
+    this.resolve(expr.left);
+    this.resolve(expr.right);
+  }
+
+  public visitCallExpr(expr: Expr.CallExpr): void {
+    this.resolve(expr.callee);
+
+    expr.args.forEach(arg => this.resolve(arg));
+  }
+
+  public visitGroupingExpr(expr: Expr.GroupingExpr): void {
+    this.resolve(expr.expression);
+  }
+
+  public visitLiteralExpr(): void {
+    return;
+  }
+
+  public visitLogicalExpr(expr: Expr.LogicalExpr): void {
+    this.resolve(expr.left);
+    this.resolve(expr.right);
+  }
+
+  public visitUnaryExpr(expr: Expr.UnaryExpr): void {
+    this.resolve(expr.right);
   }
 
   public visitVariableExpr(expr: Expr.VariableExpr): void {
@@ -105,6 +145,9 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   private declare(name: Token) {
     this.ensureScope(scope => {
       scope.set(name.lexeme, false);
+      if (scope.has(name.lexeme)) {
+        Blintz.error(name.line, 'Variable with this name already declared in this scope.', name);
+      }
     });
   }
 
@@ -114,7 +157,10 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     });
   }
 
-  private resolveFunction(fn: Stmt.FunctionStmt) {
+  private resolveFunction(fn: Stmt.FunctionStmt, type: FunctionType) {
+    const enclosingFunction = this.currentFunction;
+    this.currentFunction = type;
+
     this.beginScope();
     fn.parameters.forEach(param => {
       this.declare(param);
@@ -122,6 +168,8 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     });
     this.resolve(fn.body);
     this.endScope();
+
+    this.currentFunction = enclosingFunction;
   }
 
   private resolveLocal(expr: Expr.Expr, name: Token) {

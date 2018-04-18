@@ -12,7 +12,9 @@ import { stringify, Value } from './value';
 export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVisitor<void> {
 
   public readonly globals = new Environment();
+
   private environment = this.globals;
+  private readonly locals = new Map<Expr.Expr, number>();
 
   constructor() {
     this.globals.define('clock', {
@@ -23,12 +25,16 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     });
   }
 
-  public interpret(statements: Stmt.Stmt[]): void {
+  public interpret(statements: Stmt.Stmt[]) {
     try {
       statements.forEach(statement => this.execute(statement));
     } catch (err) {
       return;
     }
+  }
+
+  public resolve(expr: Expr.Expr, depth: number) {
+    this.locals.set(expr, depth);
   }
 
   public visitBlockStmt(stmt: Stmt.BlockStmt): void {
@@ -85,7 +91,12 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
   public visitAssignExpr(expr: Expr.AssignExpr): Value {
     const value = this.evaluate(expr.value);
 
-    this.environment.assign(expr.name, value);
+    const distance = this.locals.get(expr);
+    if (distance !== undefined) {
+      this.environment.assignAt(distance, expr.name, value);
+    } else {
+      this.globals.assign(expr.name, value);
+    }
 
     return value;
   }
@@ -186,7 +197,7 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
   }
 
   public visitVariableExpr(expr: Expr.VariableExpr): Value {
-    return this.environment.get(expr.name);
+    return this.lookUpVariable(expr.name, expr);
   }
 
   public execute(stmt: Stmt.Stmt): void {
@@ -234,5 +245,15 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
   private checkNumberOperands(operator: Token, left: Value, right: Value) {
     if (typeof left === 'number' && typeof right === 'number') { return; }
     throw new RuntimeError(operator, 'Operands must be numbers.');
+  }
+
+  private lookUpVariable(name: Token, expr: Expr.Expr): Value {
+    const distance = this.locals.get(expr);
+
+    if (distance !== undefined) {
+      return this.environment.getAt(distance, name.lexeme);
+    } else {
+      return this.globals.get(name);
+    }
   }
 }

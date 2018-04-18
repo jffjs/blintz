@@ -4,6 +4,7 @@ import { createInterface, ReadLine } from 'readline';
 import Interpreter from './interpreter';
 import Parser from './parser';
 import { printErr, printLn } from './print';
+import Resolver from './resolver';
 import RuntimeError from './runtime-error';
 import { Scanner } from './scanner';
 import { Token, TokenType } from './token';
@@ -89,6 +90,11 @@ export default class Blintz {
     const tokens: Token[] = scanner.scanTokens();
     const parser: Parser = new Parser(tokens);
     const statements = parser.parse();
+
+    if (Blintz.hadError) { return; }
+
+    const resolver = new Resolver(this.interpreter);
+    resolver.resolve(statements);
 
     if (Blintz.hadError) { return; }
 

@@ -24,6 +24,21 @@ export default class Environment {
     }
   }
 
+  public getAt(distance: number, name: string): Value {
+    return this.ancestor(distance).values.get(name) || null;
+  }
+
+  public ancestor(distance: number): Environment {
+    let environment: Environment = this;
+    for (let i = 0; i < distance; i++) {
+      if (environment.enclosing) {
+        environment = environment.enclosing;
+      }
+    }
+
+    return environment;
+  }
+
   public assign(name: Token, value: Value) {
     if (this.values.has(name.lexeme)) {
       this.values.set(name.lexeme, value);
@@ -36,5 +51,9 @@ export default class Environment {
     }
 
     throw new RuntimeError(name, `Undefined variable '${name.lexeme}'.`);
+  }
+
+  public assignAt(distance: number, name: Token, value: Value) {
+    this.ancestor(distance).values.set(name.lexeme, value);
   }
 }
