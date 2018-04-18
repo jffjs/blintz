@@ -4,6 +4,7 @@ import { isCallable } from './callable';
 import Environment from './environment';
 import BlintzFunction from './function';
 import { printLn } from './print';
+import Return from './return';
 import RuntimeError from './runtime-error';
 import { Token, TokenType } from './token';
 import { stringify, Value } from './value';
@@ -21,6 +22,7 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
       }
     });
   }
+
   public interpret(statements: Stmt.Stmt[]): void {
     try {
       statements.forEach(statement => this.execute(statement));
@@ -38,7 +40,7 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
   }
 
   public visitFunctionStmt(stmt: Stmt.FunctionStmt): void {
-    const fn = new BlintzFunction(stmt);
+    const fn = new BlintzFunction(stmt, this.environment);
     this.environment.define(stmt.name.lexeme, fn);
   }
 
@@ -53,6 +55,15 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
   public visitPrintStmt(stmt: Stmt.PrintStmt): void {
     const value = this.evaluate(stmt.expression);
     printLn(stringify(value));
+  }
+
+  public visitReturnStmt(stmt: Stmt.ReturnStmt): void {
+    let value = null;
+    if (stmt.value) {
+      value = this.evaluate(stmt.value);
+    }
+
+    throw new Return(value);
   }
 
   public visitVarStmt(stmt: Stmt.VarStmt): void {
