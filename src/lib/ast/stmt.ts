@@ -59,6 +59,16 @@ export class PrintStmt extends Stmt {
   }
 }
 
+export class ReturnStmt extends Stmt {
+  constructor(public keyword: Token, public value: Expr | null) {
+    super();
+  }
+
+  public accept<T>(visitor: StmtVisitor<T>): T {
+    return visitor.visitReturnStmt(this);
+  }
+}
+
 export class VarStmt extends Stmt {
   constructor(public name: Token, public initializer: Expr | null) {
     super();
@@ -85,6 +95,7 @@ export interface StmtVisitor<T> {
   visitFunctionStmt(expr: FunctionStmt): T;
   visitIfStmt(expr: IfStmt): T;
   visitPrintStmt(expr: PrintStmt): T;
+  visitReturnStmt(expr: ReturnStmt): T;
   visitVarStmt(expr: VarStmt): T;
   visitWhileStmt(expr: WhileStmt): T;
 }
