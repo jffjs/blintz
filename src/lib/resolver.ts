@@ -7,7 +7,8 @@ import { Token } from './token';
 
 enum FunctionType {
   None,
-  Function
+  Function,
+  Method
 }
 
 type Scope = Map<string, boolean>;
@@ -35,6 +36,23 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   public visitBlockStmt(stmt: Stmt.BlockStmt): void {
     this.beginScope();
     this.resolve(stmt.statements);
+    this.endScope();
+  }
+
+  public visitClassStmt(stmt: Stmt.ClassStmt): void {
+    this.declare(stmt.name);
+    this.define(stmt.name);
+
+    this.beginScope();
+    this.ensureScope(scope => {
+      scope.set('this', true);
+    });
+
+    stmt.methods.forEach(method => {
+      const declaration = FunctionType.Method;
+      this.resolveFunction(method, declaration);
+    });
+
     this.endScope();
   }
 
@@ -100,6 +118,10 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     expr.args.forEach(arg => this.resolve(arg));
   }
 
+  public visitGetExpr(expr: Expr.GetExpr): void {
+    this.resolve(expr.object);
+  }
+
   public visitGroupingExpr(expr: Expr.GroupingExpr): void {
     this.resolve(expr.expression);
   }
@@ -111,6 +133,15 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   public visitLogicalExpr(expr: Expr.LogicalExpr): void {
     this.resolve(expr.left);
     this.resolve(expr.right);
+  }
+
+  public visitSetExpr(expr: Expr.SetExpr): void {
+    this.resolve(expr.value);
+    this.resolve(expr.object);
+  }
+
+  public visitThisExpr(expr: Expr.ThisExpr): void {
+    this.resolveLocal(expr, expr.keyword);
   }
 
   public visitUnaryExpr(expr: Expr.UnaryExpr): void {

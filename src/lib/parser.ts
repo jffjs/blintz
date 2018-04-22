@@ -28,7 +28,8 @@ export default class Parser {
 
   private declaration(): Stmt.Stmt | null {
     try {
-      if (this.match(TokenType.Fun)) { return this.functionStatement('function'); }
+      if (this.match(TokenType.Class)) { return this.classDeclaration(); }
+      if (this.match(TokenType.Fun)) { return this.functionDeclaration('function'); }
       if (this.match(TokenType.Var)) { return this.varDeclaration(); }
 
       return this.statement();
@@ -38,7 +39,20 @@ export default class Parser {
     }
   }
 
-  private functionStatement(kind: string): Stmt.Stmt {
+  private classDeclaration(): Stmt.Stmt {
+    const name = this.consume(TokenType.Identifier, 'Expect class name.');
+    this.consume(TokenType.LeftBrace, `Expect '{' before class body.`);
+
+    const methods: Stmt.FunctionStmt[] = [];
+    while (!this.check(TokenType.RightBrace) && !this.isAtEnd) {
+      methods.push(this.functionDeclaration('method'));
+    }
+    this.consume(TokenType.RightBrace, `Expect '}' after class body.`);
+
+    return new Stmt.ClassStmt(name, methods);
+  }
+
+  private functionDeclaration(kind: string): Stmt.FunctionStmt {
     const name = this.consume(TokenType.Identifier, `Expect ${kind} name.`);
     this.consume(TokenType.LeftParen, `Expect '(' after ${kind} name.`);
     const parameters: Token[] = [];
@@ -200,6 +214,9 @@ export default class Parser {
       if (expr instanceof Expr.VariableExpr) {
         const name = expr.name;
         return new Expr.AssignExpr(name, value);
+      } else if (expr instanceof Expr.GetExpr) {
+        const get = expr;
+        return new Expr.SetExpr(get.object, get.name, value);
       }
 
       throw new ParseError(equals, 'Invalid assignment target.');
@@ -293,6 +310,9 @@ export default class Parser {
     while (true) {
       if (this.match(TokenType.LeftParen)) {
         expr = this.finishCall(expr);
+      } else if (this.match(TokenType.Dot)) {
+        const name = this.consume(TokenType.Identifier, `Expect property name after '.'.`);
+        expr = new Expr.GetExpr(expr, name);
       } else {
         break;
       }
@@ -322,6 +342,7 @@ export default class Parser {
     if (this.match(TokenType.False)) { return new Expr.LiteralExpr(false); }
     if (this.match(TokenType.True)) { return new Expr.LiteralExpr(true); }
     if (this.match(TokenType.Nil)) { return new Expr.LiteralExpr(null); }
+    if (this.match(TokenType.This)) { return new Expr.ThisExpr(this.previous()); }
 
     if (this.match(TokenType.Number, TokenType.String)) {
       return new Expr.LiteralExpr(this.previous().literal);

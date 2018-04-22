@@ -1,8 +1,10 @@
 import * as Expr from './ast/expr';
 import * as Stmt from './ast/stmt';
 import { isCallable } from './callable';
+import BlintzClass from './class';
 import Environment from './environment';
 import BlintzFunction from './function';
+import BlintzObject from './object';
 import { printLn } from './print';
 import Return from './return';
 import RuntimeError from './runtime-error';
@@ -39,6 +41,18 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
 
   public visitBlockStmt(stmt: Stmt.BlockStmt): void {
     this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  public visitClassStmt(stmt: Stmt.ClassStmt): void {
+    this.environment.define(stmt.name.lexeme, null);
+    const methods = new Map<string, BlintzFunction>();
+    stmt.methods.forEach(method => {
+      const fn = new BlintzFunction(method, this.environment);
+      methods.set(method.name.lexeme, fn);
+    });
+
+    const klass = new BlintzClass(stmt.name.lexeme, methods);
+    this.environment.assign(stmt.name, klass);
   }
 
   public visitExpressionStmt(stmt: Stmt.ExpressionStmt): void {
@@ -161,6 +175,15 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     }
   }
 
+  public visitGetExpr(expr: Expr.GetExpr): Value {
+    const object = this.evaluate(expr.object);
+    if (object instanceof BlintzObject) {
+      return object.get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name, 'Only objects have properties.');
+  }
+
   public visitGroupingExpr(expr: Expr.GroupingExpr): Value {
     return this.evaluate(expr.expression);
   }
@@ -179,6 +202,22 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     }
 
     return this.evaluate(expr.right);
+  }
+
+  public visitSetExpr(expr: Expr.SetExpr): Value {
+    const object = this.evaluate(expr.object);
+
+    if (object instanceof BlintzObject) {
+      const value = this.evaluate(expr.value);
+      object.set(expr.name, value);
+      return value;
+    } else {
+      throw new RuntimeError(expr.name, 'Only objects have fields.');
+    }
+  }
+
+  public visitThisExpr(expr: Expr.ThisExpr): Value {
+    return this.lookUpVariable(expr.keyword, expr);
   }
 
   public visitUnaryExpr(expr: Expr.UnaryExpr): Value {

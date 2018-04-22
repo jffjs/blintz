@@ -2,6 +2,7 @@ import { FunctionStmt } from './ast/stmt';
 import { Callable } from './callable';
 import Environment from './environment';
 import Interpreter from './interpreter';
+import BlintzObject from './object';
 import { Value } from './value';
 
 export default class BlintzFunction implements Callable {
@@ -13,6 +14,12 @@ export default class BlintzFunction implements Callable {
 
   public arity(): number {
     return this.declaration.parameters.length;
+  }
+
+  public bind(object: BlintzObject): BlintzFunction {
+    const environment = new Environment(this.closure);
+    environment.define('this', object);
+    return new BlintzFunction(this.declaration, environment);
   }
 
   public call(interpreter: Interpreter, args: Value[]): Value {

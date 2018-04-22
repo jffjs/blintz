@@ -92,6 +92,10 @@ const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
     'paren: Token',
     'args: Expr[]'
   ],
+  'Get': [
+    'object: Expr',
+    'name: Token'
+  ],
   'Grouping': [
     'expression: Expr'
   ],
@@ -102,6 +106,14 @@ const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
     'left: Expr',
     'operator: Token',
     'right: Expr'
+  ],
+  'Set': [
+    'object: Expr',
+    'name: Token',
+    'value: Expr'
+  ],
+  'This': [
+    'keyword: Token'
   ],
   'Unary': [
     'operator: Token',
@@ -117,6 +129,10 @@ exprGenerator.run();
 const stmtGenerator = new AstGenerator('./src/lib/ast', 'Stmt', {
   'Block': [
     'statements: Stmt[]'
+  ],
+  'Class': [
+    'name: Token',
+    'methods: FunctionStmt[]'
   ],
   'Expression': [
     'expression: Expr'

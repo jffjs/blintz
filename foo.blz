@@ -20,3 +20,34 @@ fun makeCounter() {
 var counter = makeCounter();
 counter(); // "1".
 counter(); // "2".
+
+class DevonshireCream {
+  serveOn() {
+    return "Scones";
+  }
+}
+
+print DevonshireCream; 
+
+class Bagel {}
+var bagel = Bagel();
+print bagel;
+
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+}
+
+Bacon().eat();
+
+class Cake {
+  taste() {
+    var adjective = "delicious";
+    print "The " + this.flavor + " cake is " + adjective + "!";
+  }
+}
+
+var cake = Cake();
+cake.flavor = "German chocolate";
+cake.taste();

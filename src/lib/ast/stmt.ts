@@ -19,6 +19,16 @@ export class BlockStmt extends Stmt {
   }
 }
 
+export class ClassStmt extends Stmt {
+  constructor(public name: Token, public methods: FunctionStmt[]) {
+    super();
+  }
+
+  public accept<T>(visitor: StmtVisitor<T>): T {
+    return visitor.visitClassStmt(this);
+  }
+}
+
 export class ExpressionStmt extends Stmt {
   constructor(public expression: Expr) {
     super();
@@ -91,6 +101,7 @@ export class WhileStmt extends Stmt {
 
 export interface StmtVisitor<T> {
   visitBlockStmt(expr: BlockStmt): T;
+  visitClassStmt(expr: ClassStmt): T;
   visitExpressionStmt(expr: ExpressionStmt): T;
   visitFunctionStmt(expr: FunctionStmt): T;
   visitIfStmt(expr: IfStmt): T;

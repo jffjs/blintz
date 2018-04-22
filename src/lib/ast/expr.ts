@@ -39,6 +39,16 @@ export class CallExpr extends Expr {
   }
 }
 
+export class GetExpr extends Expr {
+  constructor(public object: Expr, public name: Token) {
+    super();
+  }
+
+  public accept<T>(visitor: ExprVisitor<T>): T {
+    return visitor.visitGetExpr(this);
+  }
+}
+
 export class GroupingExpr extends Expr {
   constructor(public expression: Expr) {
     super();
@@ -69,6 +79,26 @@ export class LogicalExpr extends Expr {
   }
 }
 
+export class SetExpr extends Expr {
+  constructor(public object: Expr, public name: Token, public value: Expr) {
+    super();
+  }
+
+  public accept<T>(visitor: ExprVisitor<T>): T {
+    return visitor.visitSetExpr(this);
+  }
+}
+
+export class ThisExpr extends Expr {
+  constructor(public keyword: Token) {
+    super();
+  }
+
+  public accept<T>(visitor: ExprVisitor<T>): T {
+    return visitor.visitThisExpr(this);
+  }
+}
+
 export class UnaryExpr extends Expr {
   constructor(public operator: Token, public right: Expr) {
     super();
@@ -93,9 +123,12 @@ export interface ExprVisitor<T> {
   visitAssignExpr(expr: AssignExpr): T;
   visitBinaryExpr(expr: BinaryExpr): T;
   visitCallExpr(expr: CallExpr): T;
+  visitGetExpr(expr: GetExpr): T;
   visitGroupingExpr(expr: GroupingExpr): T;
   visitLiteralExpr(expr: LiteralExpr): T;
   visitLogicalExpr(expr: LogicalExpr): T;
+  visitSetExpr(expr: SetExpr): T;
+  visitThisExpr(expr: ThisExpr): T;
   visitUnaryExpr(expr: UnaryExpr): T;
   visitVariableExpr(expr: VariableExpr): T;
 }
