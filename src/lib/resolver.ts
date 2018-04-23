@@ -5,16 +5,23 @@ import Interpreter from './interpreter';
 import Stack from './stack';
 import { Token } from './token';
 
+enum ClassType {
+  None,
+  Class
+}
+
 enum FunctionType {
   None,
   Function,
-  Method
+  Method,
+  Initializer
 }
 
 type Scope = Map<string, boolean>;
 
 export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisitor<void> {
 
+  private currentClass = ClassType.None;
   private currentFunction = FunctionType.None;
   private readonly scopes = new Stack<Scope>();
 
@@ -43,17 +50,28 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     this.declare(stmt.name);
     this.define(stmt.name);
 
+    const enclosingClass = this.currentClass;
+    this.currentClass = ClassType.Class;
+
     this.beginScope();
     this.ensureScope(scope => {
       scope.set('this', true);
     });
 
     stmt.methods.forEach(method => {
-      const declaration = FunctionType.Method;
+      let declaration = FunctionType.Method;
+      if (method.name.lexeme === 'init') {
+        declaration = FunctionType.Initializer;
+      }
       this.resolveFunction(method, declaration);
     });
 
+    if (stmt.superclass) {
+      this.resolve(stmt.superclass);
+    }
+
     this.endScope();
+    this.currentClass = enclosingClass;
   }
 
   public visitExpressionStmt(stmt: Stmt.ExpressionStmt): void {
@@ -93,6 +111,9 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     }
 
     if (stmt.value) {
+      if (this.currentFunction === FunctionType.Initializer) {
+        Blintz.error(stmt.keyword.line, 'Cannot return a value from initializer.', stmt.keyword);
+      }
       this.resolve(stmt.value);
     }
   }
@@ -141,6 +162,10 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   }
 
   public visitThisExpr(expr: Expr.ThisExpr): void {
+    if (this.currentClass === ClassType.None) {
+      Blintz.error(expr.keyword.line, `Cannot use 'this' outside of a class.`, expr.keyword);
+      return;
+    }
     this.resolveLocal(expr, expr.keyword);
   }
 

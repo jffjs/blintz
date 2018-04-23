@@ -9,7 +9,8 @@ export default class BlintzFunction implements Callable {
 
   constructor(
     private readonly declaration: FunctionStmt,
-    private readonly closure: Environment
+    private readonly closure: Environment,
+    private readonly isInitializer: boolean = false
   ) { }
 
   public arity(): number {
@@ -19,7 +20,7 @@ export default class BlintzFunction implements Callable {
   public bind(object: BlintzObject): BlintzFunction {
     const environment = new Environment(this.closure);
     environment.define('this', object);
-    return new BlintzFunction(this.declaration, environment);
+    return new BlintzFunction(this.declaration, environment, this.isInitializer);
   }
 
   public call(interpreter: Interpreter, args: Value[]): Value {
@@ -34,6 +35,9 @@ export default class BlintzFunction implements Callable {
       return returnVal.value;
     }
 
+    if (this.isInitializer) {
+      return this.closure.getAt(0, 'this');
+    }
     return null;
   }
 

@@ -47,7 +47,7 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
     this.environment.define(stmt.name.lexeme, null);
     const methods = new Map<string, BlintzFunction>();
     stmt.methods.forEach(method => {
-      const fn = new BlintzFunction(method, this.environment);
+      const fn = new BlintzFunction(method, this.environment, method.name.lexeme === 'init');
       methods.set(method.name.lexeme, fn);
     });
 

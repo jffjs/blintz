@@ -1,5 +1,6 @@
 import { Callable } from './callable';
 import BlintzFunction from './function';
+import Interpreter from './interpreter';
 import BlintzObject from './object';
 import { Value } from './value';
 
@@ -11,11 +12,21 @@ export default class BlintzClass implements Callable {
   ) { }
 
   public arity(): number {
-    return 0;
+    const initializer = this.methods.get('init');
+
+    if (initializer) {
+      return initializer.arity();
+    } else {
+      return 0;
+    }
   }
 
-  public call(): Value {
+  public call(interpreter: Interpreter, args: Value[]): Value {
     const object = new BlintzObject(this);
+    const initializer = this.methods.get('init');
+    if (initializer) {
+      initializer.bind(object).call(interpreter, args);
+    }
     return object;
   }
 

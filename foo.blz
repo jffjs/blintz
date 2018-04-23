@@ -42,12 +42,15 @@ class Bacon {
 Bacon().eat();
 
 class Cake {
-  taste() {
-    var adjective = "delicious";
+
+  init(flavor) {
+    this.flavor = flavor;
+  }
+
+  taste(adjective) {
     print "The " + this.flavor + " cake is " + adjective + "!";
   }
 }
 
-var cake = Cake();
-cake.flavor = "German chocolate";
-cake.taste();
+var cake = Cake("Chocolate");
+cake.taste("yummy");

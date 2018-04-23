@@ -132,7 +132,8 @@ const stmtGenerator = new AstGenerator('./src/lib/ast', 'Stmt', {
   ],
   'Class': [
     'name: Token',
-    'methods: FunctionStmt[]'
+    'methods: FunctionStmt[]',
+    'superclass: VariableExpr | null'
   ],
   'Expression': [
     'expression: Expr'
@@ -162,6 +163,6 @@ const stmtGenerator = new AstGenerator('./src/lib/ast', 'Stmt', {
     'condition: Expr',
     'body: Stmt'
   ]
-}, [`import { Expr } from './expr';`, `import { Token } from '../token';`]);
+}, [`import { Expr, VariableExpr } from './expr';`, `import { Token } from '../token';`]);
 
 stmtGenerator.run();

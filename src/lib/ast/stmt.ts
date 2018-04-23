@@ -2,7 +2,7 @@
 // Run `yarn gen:ast` to generate.
 /* tslint:disable */
 
-import { Expr } from './expr';
+import { Expr, VariableExpr } from './expr';
 import { Token } from '../token';
 
 export abstract class Stmt {
@@ -20,7 +20,7 @@ export class BlockStmt extends Stmt {
 }
 
 export class ClassStmt extends Stmt {
-  constructor(public name: Token, public methods: FunctionStmt[]) {
+  constructor(public name: Token, public methods: FunctionStmt[], public superclass: VariableExpr | null) {
     super();
   }
 

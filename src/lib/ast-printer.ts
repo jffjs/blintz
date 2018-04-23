@@ -17,6 +17,10 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
     return this.parenthesize(expr.accept(this), ...expr.args);
   }
 
+  public visitGetExpr(expr: Expr.GetExpr): string {
+    return this.parenthesize(`get ${expr.name.lexeme}`, expr.object);
+  }
+
   public visitGroupingExpr(expr: Expr.GroupingExpr): string {
     return this.parenthesize('group', expr.expression);
   }
@@ -37,6 +41,14 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
 
   public visitLogicalExpr(expr: Expr.LogicalExpr): string {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
+  }
+
+  public visitSetExpr(expr: Expr.SetExpr): string {
+    return this.parenthesize(`set ${expr.value} ${expr.name.lexeme}`, expr.object);
+  }
+
+  public visitThisExpr(expr: Expr.ThisExpr): string {
+    return expr.keyword.lexeme;
   }
 
   public visitUnaryExpr(expr: Expr.UnaryExpr): string {
