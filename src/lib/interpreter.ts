@@ -45,13 +45,29 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
 
   public visitClassStmt(stmt: Stmt.ClassStmt): void {
     this.environment.define(stmt.name.lexeme, null);
+
+    let superclass: Value = null;
+    if (stmt.superclass) {
+      superclass = this.evaluate(stmt.superclass);
+      if (!(superclass instanceof BlintzClass)) {
+        throw new RuntimeError(stmt.superclass.name, 'Superclass must be a class.');
+      }
+      this.environment = new Environment(this.environment);
+      this.environment.define('super', superclass);
+    }
+
     const methods = new Map<string, BlintzFunction>();
     stmt.methods.forEach(method => {
       const fn = new BlintzFunction(method, this.environment, method.name.lexeme === 'init');
       methods.set(method.name.lexeme, fn);
     });
 
-    const klass = new BlintzClass(stmt.name.lexeme, methods);
+    const klass = new BlintzClass(stmt.name.lexeme, superclass, methods);
+
+    if (superclass && this.environment.enclosing) {
+      this.environment = this.environment.enclosing;
+    }
+
     this.environment.assign(stmt.name, klass);
   }
 
@@ -213,6 +229,23 @@ export default class Interpreter implements Expr.ExprVisitor<Value>, Stmt.StmtVi
       return value;
     } else {
       throw new RuntimeError(expr.name, 'Only objects have fields.');
+    }
+  }
+
+  public visitSuperExpr(expr: Expr.SuperExpr): Value {
+    const distance = this.locals.get(expr);
+    if (distance !== undefined) {
+      const superclass = this.environment.getAt(distance, 'super') as BlintzClass;
+      const object = this.environment.getAt(distance - 1, 'this') as BlintzObject;
+      const method = superclass.findMethod(object, expr.method.lexeme);
+
+      if (method) {
+        return method;
+      } else {
+        throw new RuntimeError(expr.method, `Undefined property '${expr.method.lexeme}'.`);
+      }
+    } else {
+      throw new Error('Unreachable branch.');
     }
   }
 

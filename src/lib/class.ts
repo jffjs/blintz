@@ -8,6 +8,7 @@ export default class BlintzClass implements Callable {
 
   constructor(
     public readonly name: string,
+    public readonly superclass: BlintzClass | null,
     private readonly methods: Map<string, BlintzFunction>
   ) { }
 
@@ -34,9 +35,13 @@ export default class BlintzClass implements Callable {
     const method = this.methods.get(name);
     if (method) {
       return method.bind(object);
-    } else {
-      return null;
     }
+
+    if (this.superclass !== null) {
+      return this.superclass.findMethod(object, name);
+    }
+
+    return null;
   }
 
   public toString() {

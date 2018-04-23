@@ -53,6 +53,14 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     const enclosingClass = this.currentClass;
     this.currentClass = ClassType.Class;
 
+    if (stmt.superclass) {
+      this.resolve(stmt.superclass);
+      this.beginScope();
+      this.ensureScope(scope => {
+        scope.set('super', true);
+      });
+    }
+
     this.beginScope();
     this.ensureScope(scope => {
       scope.set('this', true);
@@ -66,11 +74,12 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
       this.resolveFunction(method, declaration);
     });
 
+    this.endScope();
+
     if (stmt.superclass) {
-      this.resolve(stmt.superclass);
+      this.endScope();
     }
 
-    this.endScope();
     this.currentClass = enclosingClass;
   }
 
@@ -159,6 +168,10 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   public visitSetExpr(expr: Expr.SetExpr): void {
     this.resolve(expr.value);
     this.resolve(expr.object);
+  }
+
+  public visitSuperExpr(expr: Expr.SuperExpr): void {
+    this.resolveLocal(expr, expr.keyword);
   }
 
   public visitThisExpr(expr: Expr.ThisExpr): void {

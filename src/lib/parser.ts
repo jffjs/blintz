@@ -347,23 +347,31 @@ export default class Parser {
 
   private primary(): Expr.Expr {
     if (this.match(TokenType.False)) { return new Expr.LiteralExpr(false); }
-    if (this.match(TokenType.True)) { return new Expr.LiteralExpr(true); }
-    if (this.match(TokenType.Nil)) { return new Expr.LiteralExpr(null); }
-    if (this.match(TokenType.This)) { return new Expr.ThisExpr(this.previous()); }
 
-    if (this.match(TokenType.Number, TokenType.String)) {
-      return new Expr.LiteralExpr(this.previous().literal);
-    }
-
-    if (this.match(TokenType.Identifier)) {
-      return new Expr.VariableExpr(this.previous());
-    }
+    if (this.match(TokenType.Identifier)) { return new Expr.VariableExpr(this.previous()); }
 
     if (this.match(TokenType.LeftParen)) {
       const expr = this.expression();
       this.consume(TokenType.RightParen, `Expect ')' after expression.`);
       return new Expr.GroupingExpr(expr);
     }
+
+    if (this.match(TokenType.Nil)) { return new Expr.LiteralExpr(null); }
+
+    if (this.match(TokenType.Number, TokenType.String)) {
+      return new Expr.LiteralExpr(this.previous().literal);
+    }
+
+    if (this.match(TokenType.Super)) {
+      const keyword = this.previous();
+      this.consume(TokenType.Dot, `Expect '.' after 'super'.`);
+      const method = this.consume(TokenType.Identifier, 'Expect superclass method name.');
+      return new Expr.SuperExpr(keyword, method);
+    }
+
+    if (this.match(TokenType.This)) { return new Expr.ThisExpr(this.previous()); }
+    if (this.match(TokenType.True)) { return new Expr.LiteralExpr(true); }
+
 
     throw new ParseError(this.peek(), 'Expect expression.');
   }

@@ -47,6 +47,10 @@ export default class AstPrinter implements Expr.ExprVisitor<string> {
     return this.parenthesize(`set ${expr.value} ${expr.name.lexeme}`, expr.object);
   }
 
+  public visitSuperExpr(expr: Expr.SuperExpr): string {
+    return this.parenthesize(`super ${expr.method.lexeme}`);
+  }
+
   public visitThisExpr(expr: Expr.ThisExpr): string {
     return expr.keyword.lexeme;
   }

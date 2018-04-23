@@ -5,7 +5,7 @@ import { Value } from './value';
 export default class Environment {
   private readonly values: Map<string, Value> = new Map<string, Value>();
 
-  constructor(private enclosing: Environment | null = null) { }
+  constructor(public enclosing: Environment | null = null) { }
 
   public define(name: string, value: Value) {
     this.values.set(name, value);

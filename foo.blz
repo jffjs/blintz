@@ -3,7 +3,7 @@ fun fibonacci(n) {
   return fibonacci(n - 2) + fibonacci(n - 1);
 }
 
-for (var i = 0; i < 20; i = i + 1) {
+for (var i = 0; i < 10; i = i + 1) {
   print fibonacci(i);
 }
 
@@ -54,3 +54,18 @@ class Cake {
 
 var cake = Cake("Chocolate");
 cake.taste("yummy");
+
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+}
+
+class BostonCream < Doughnut {
+  cook() {
+    super.cook();
+    print "Pipe full of custard and coat with chocolate.";
+  }
+}
+
+BostonCream().cook();

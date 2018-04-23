@@ -112,6 +112,10 @@ const exprGenerator = new AstGenerator('./src/lib/ast', 'Expr', {
     'name: Token',
     'value: Expr'
   ],
+  'Super': [
+    'keyword: Token',
+    'method: Token'
+  ],
   'This': [
     'keyword: Token'
   ],

@@ -89,6 +89,16 @@ export class SetExpr extends Expr {
   }
 }
 
+export class SuperExpr extends Expr {
+  constructor(public keyword: Token, public method: Token) {
+    super();
+  }
+
+  public accept<T>(visitor: ExprVisitor<T>): T {
+    return visitor.visitSuperExpr(this);
+  }
+}
+
 export class ThisExpr extends Expr {
   constructor(public keyword: Token) {
     super();
@@ -128,6 +138,7 @@ export interface ExprVisitor<T> {
   visitLiteralExpr(expr: LiteralExpr): T;
   visitLogicalExpr(expr: LogicalExpr): T;
   visitSetExpr(expr: SetExpr): T;
+  visitSuperExpr(expr: SuperExpr): T;
   visitThisExpr(expr: ThisExpr): T;
   visitUnaryExpr(expr: UnaryExpr): T;
   visitVariableExpr(expr: VariableExpr): T;
