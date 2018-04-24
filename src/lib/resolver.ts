@@ -7,7 +7,8 @@ import { Token } from './token';
 
 enum ClassType {
   None,
-  Class
+  Class,
+  Subclass
 }
 
 enum FunctionType {
@@ -54,6 +55,7 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
     this.currentClass = ClassType.Class;
 
     if (stmt.superclass) {
+      this.currentClass = ClassType.Subclass;
       this.resolve(stmt.superclass);
       this.beginScope();
       this.ensureScope(scope => {
@@ -171,6 +173,11 @@ export default class Resolver implements Expr.ExprVisitor<void>, Stmt.StmtVisito
   }
 
   public visitSuperExpr(expr: Expr.SuperExpr): void {
+    if (this.currentClass === ClassType.None) {
+      Blintz.error(expr.keyword.line, `Cannot use 'super' outside of a class.`, expr.keyword);
+    } else if (this.currentClass !== ClassType.Subclass) {
+      Blintz.error(expr.keyword.line, `Cannot use 'super' in a class with no superclass.`, expr.keyword);
+    }
     this.resolveLocal(expr, expr.keyword);
   }
 
