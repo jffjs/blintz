@@ -1,4 +1,5 @@
 #[derive(Debug, Primitive)]
 pub enum OpCode {
-    OpReturn = 0
+    OpConstant = 0,
+    OpReturn = 1,
 }
