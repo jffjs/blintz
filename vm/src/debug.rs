@@ -29,6 +29,7 @@ fn disassemble_instruction(chunk: &Chunk, offset: usize) -> usize {
         Some(opcode) => {
             match opcode {
                 OpCode::OpConstant => constant_instruction("OP_CONSTANT", chunk, offset),
+                OpCode::OpConstantLong => constant_long_instruction("OP_CONSTANT_LONG", chunk, offset),
                 OpCode::OpReturn => simple_instruction("OP_RETURN", offset),
                 // _ => panic!(format!("Implement disassembly for opcode {:?}", opcode))
             }
@@ -45,6 +46,16 @@ fn constant_instruction(name: &str, chunk: &Chunk, offset: usize) -> usize {
     // when values get more complex, maybe implement Display for Value type
     println!("{:<16} {:4} '{}'", name, constant, chunk.constants.values[constant as usize]);
     offset + 2
+}
+
+fn constant_long_instruction(name: &str, chunk: &Chunk, offset: usize) -> usize {
+    let b1 = (chunk.code[offset + 1] as usize) << 16;
+    let b2 = (chunk.code[offset + 2] as usize) << 8;
+    let b3 = chunk.code[offset + 3] as usize;
+    let constant = b3 | b2 | b1;
+    // when values get more complex, maybe implement Display for Value type
+    println!("{:<16} {:4} '{}'", name, constant, chunk.constants.values[constant as usize]);
+    offset + 4
 }
 
 fn simple_instruction(name: &str, offset: usize) -> usize {
