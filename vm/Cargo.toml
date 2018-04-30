@@ -5,4 +5,5 @@ authors = ["Jeff Smith <jffreyjs@gmail.com>"]
 
 [dependencies]
 enum-primitive-derive = "0.1.2"
+failure = "0.1.1"
 num-traits = "0.2.2"
