@@ -14,5 +14,7 @@ fn main() {
 
     chunk.write_op(OpCode::OpReturn, 123);
 
-    disassemble_chunk(&chunk, "test chunk");
+    // disassemble_chunk(&chunk, "test chunk");
+
+    vm.interpret(&chunk);
 }
