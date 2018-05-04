@@ -1,6 +1,7 @@
 use num_traits::FromPrimitive;
 use chunk::Chunk;
 use opcode::OpCode;
+use opcode::OpCode::*;
 
 pub fn disassemble_chunk(chunk: &Chunk, name: &str) {
     println!("== {} ==", name);
@@ -28,9 +29,14 @@ pub fn disassemble_instruction(chunk: &Chunk, offset: usize) -> usize {
     match OpCode::from_u8(instruction) {
         Some(opcode) => {
             match opcode {
-                OpCode::OpConstant => constant_instruction("OP_CONSTANT", chunk, offset),
-                OpCode::OpConstantLong => constant_long_instruction("OP_CONSTANT_LONG", chunk, offset),
-                OpCode::OpReturn => simple_instruction("OP_RETURN", offset),
+                OpConstant => constant_instruction("OP_CONSTANT", chunk, offset),
+                OpConstantLong => constant_long_instruction("OP_CONSTANT_LONG", chunk, offset),
+                OpReturn => simple_instruction("OP_RETURN", offset),
+                OpAdd => simple_instruction("OP_ADD", offset),
+                OpSubtract => simple_instruction("OP_SUBTRACT", offset),
+                OpMultiply => simple_instruction("OP_MULTIPLY", offset),
+                OpDivide => simple_instruction("OP_DIVIDE", offset),
+                OpNegate => simple_instruction("OP_NEGATE", offset),
                 // _ => panic!(format!("Implement disassembly for opcode {:?}", opcode))
             }
         },

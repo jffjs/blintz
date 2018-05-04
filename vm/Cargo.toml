@@ -3,10 +3,12 @@ name = "blintz_vm"
 version = "0.1.0"
 authors = ["Jeff Smith <jffreyjs@gmail.com>"]
 
-[features]
-trace_execution = []
-
 [dependencies]
 enum-primitive-derive = "0.1.2"
 failure = "0.1.1"
 num-traits = "0.2.2"
+
+[features]
+trace_execution = []
+
+default = ["trace_execution"]

@@ -4,6 +4,7 @@ use num_traits::FromPrimitive;
 use chunk::Chunk;
 use debug::disassemble_instruction;
 use opcode::OpCode;
+use opcode::OpCode::*;
 use value::Value;
 
 #[derive(Debug, Fail)]
@@ -18,11 +19,12 @@ pub type InterpretResult = Result<(), Error>;
 
 pub struct VM {
     ip: usize,
+    stack: Vec<Value>,
 }
 
 impl VM {
     pub fn new() -> VM {
-        VM { ip: 0 }
+        VM { ip: 0, stack: vec![] }
     }
 
     pub fn interpret(&mut self, chunk: &Chunk) -> InterpretResult {
@@ -34,21 +36,52 @@ impl VM {
     fn run(&mut self, chunk: &Chunk) -> InterpretResult {
         loop {
             if cfg!(feature = "trace_execution") {
+                print!("          ");
+                for val in &self.stack {
+                    print!("[ {} ]", val);
+                }
+                print!("\n");
                 disassemble_instruction(chunk, self.ip);
             }
 
             match OpCode::from_u8(self.read_byte(chunk)) {
                 Some(opcode) => match opcode {
-                    OpCode::OpReturn => return Ok(()),
-                    OpCode::OpConstant => {
+                    OpReturn => {
+                        println!("{}", self.stack.pop().unwrap());
+                        return Ok(());
+                    },
+                    OpConstant => {
                         let constant = self.read_constant(chunk);
-                        println!("{}", constant);
+                        self.stack.push(constant);
                     },
-                    OpCode::OpConstantLong => {
+                    OpConstantLong => {
                         let constant = self.read_constant_long(chunk);
-                        println!("{}", constant);
+                        self.stack.push(constant);
                     },
-                    _ => return Err(Error::from(VmError::RuntimeError))
+                    OpAdd => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+                        self.stack.push(a + b);
+                    },
+                    OpSubtract => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+                        self.stack.push(a - b);
+                    },
+                    OpMultiply => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+                        self.stack.push(a * b);
+                    },
+                    OpDivide => {
+                        let b = self.stack.pop().unwrap();
+                        let a = self.stack.pop().unwrap();
+                        self.stack.push(a / b);
+                    },
+                    OpNegate => {
+                        let val = -self.stack.pop().unwrap();
+                        self.stack.push(val);
+                    }
                 },
                 None => continue
             }
